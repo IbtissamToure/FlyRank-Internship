@@ -107,28 +107,28 @@
   },
   "playbook": [
     {
-      "action": "1 Protect \u2014 review now",
+      "action": "1 Protect: review now",
       "pages": 750,
       "observed_decline_rate": 0.7867,
       "median_w2_impressions": 1976.5,
       "lift_vs_base": 1.2767
     },
     {
-      "action": "2 Improve \u2014 snippet / intent review",
+      "action": "2 Improve: snippet / intent review",
       "pages": 1476,
       "observed_decline_rate": 0.7364,
       "median_w2_impressions": 330.0,
       "lift_vs_base": 1.1952
     },
     {
-      "action": "3 Investigate \u2014 refresh or merge candidate",
+      "action": "3 Investigate: refresh or merge candidate",
       "pages": 163,
       "observed_decline_rate": 0.7239,
       "median_w2_impressions": 550.0,
       "lift_vs_base": 1.1749
     },
     {
-      "action": "4 Monitor \u2014 re-check next month",
+      "action": "4 Monitor: re-check next month",
       "pages": 3561,
       "observed_decline_rate": 0.6978,
       "median_w2_impressions": 360.0,
