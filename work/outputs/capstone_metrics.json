@@ -1,0 +1,203 @@
+{
+  "seed": 42,
+  "data": {
+    "starter_rows": 30000,
+    "eligible_pages": 23727,
+    "excluded_low_volume": 6273,
+    "clients": 31,
+    "base_rate_decline": 0.6162
+  },
+  "validation": "GroupKFold(n_splits=5) by client_id; out-of-fold scores",
+  "label": "impressions_last_30d < 0.8 * impressions_prev_30d, pages with impressions_prev_30d >= 10",
+  "features": [
+    "log_impressions_w2",
+    "log_impressions_w3",
+    "momentum_impressions",
+    "log_clicks_w2",
+    "log_clicks_w3",
+    "momentum_clicks",
+    "log_sessions_w2",
+    "log_sessions_w3",
+    "momentum_sessions",
+    "ctr_w2",
+    "age_at_T",
+    "log_search_volume",
+    "competition",
+    "cpc",
+    "log_word_count",
+    "has_keyword_data",
+    "has_word_count",
+    "content_type",
+    "main_intent"
+  ],
+  "fold_metrics": {
+    "Visibility rule": {
+      "ROC-AUC": 0.5054,
+      "AUC sd": 0.0553,
+      "Avg precision": 0.6236,
+      "Precision@50": 0.504,
+      "Precision@200": 0.539
+    },
+    "Already-falling rule": {
+      "ROC-AUC": 0.5332,
+      "AUC sd": 0.0226,
+      "Avg precision": 0.647,
+      "Precision@50": 0.588,
+      "Precision@200": 0.612
+    },
+    "Logistic regression": {
+      "ROC-AUC": 0.5974,
+      "AUC sd": 0.0189,
+      "Avg precision": 0.7124,
+      "Precision@50": 0.836,
+      "Precision@200": 0.812
+    },
+    "Gradient boosting": {
+      "ROC-AUC": 0.586,
+      "AUC sd": 0.0306,
+      "Avg precision": 0.698,
+      "Precision@50": 0.732,
+      "Precision@200": 0.766
+    },
+    "Base rate (no ranking)": {
+      "ROC-AUC": 0.5,
+      "AUC sd": 0.0,
+      "Avg precision": 0.6315,
+      "Precision@50": 0.6315,
+      "Precision@200": 0.6315
+    }
+  },
+  "within_client": {
+    "clients": 20,
+    "min_pages": 100,
+    "median base rate": 0.6674,
+    "median AUC | Visibility rule": 0.4541,
+    "median P@20 | Visibility rule": 0.55,
+    "median AUC | Already-falling rule": 0.5301,
+    "median P@20 | Already-falling rule": 0.6,
+    "median AUC | Logistic regression": 0.6026,
+    "median P@20 | Logistic regression": 0.8,
+    "median AUC | Gradient boosting": 0.5772,
+    "median P@20 | Gradient boosting": 0.725,
+    "lr_auc_beats_already_falling_rule": 16,
+    "lr_auc_beats_visibility_rule": 18,
+    "lr_auc_above_chance": 19
+  },
+  "week5_features_forward_label": {
+    "auc": 0.5518,
+    "precision_at_50": 0.756
+  },
+  "leakage_experiment_auc": {
+    "Honest features (knowable at T)": 0.5974,
+    "+ 90-day aggregates (overlap label window)": 0.6874,
+    "+ trend_pct (the label itself)": 0.9999
+  },
+  "single_group_split_seed42": {
+    "test clients": 7,
+    "test pages": 4252,
+    "base rate": 0.611,
+    "LR AUC": 0.6276,
+    "LR P@50": 0.92,
+    "Already-falling P@50": 0.54
+  },
+  "strict_floor_100": {
+    "pages": 18010,
+    "lr_auc": 0.6279,
+    "rule_auc": 0.5672
+  },
+  "playbook": [
+    {
+      "action": "1 Protect \u2014 review now",
+      "pages": 750,
+      "observed_decline_rate": 0.7867,
+      "median_w2_impressions": 1976.5,
+      "lift_vs_base": 1.2767
+    },
+    {
+      "action": "2 Improve \u2014 snippet / intent review",
+      "pages": 1476,
+      "observed_decline_rate": 0.7364,
+      "median_w2_impressions": 330.0,
+      "lift_vs_base": 1.1952
+    },
+    {
+      "action": "3 Investigate \u2014 refresh or merge candidate",
+      "pages": 163,
+      "observed_decline_rate": 0.7239,
+      "median_w2_impressions": 550.0,
+      "lift_vs_base": 1.1749
+    },
+    {
+      "action": "4 Monitor \u2014 re-check next month",
+      "pages": 3561,
+      "observed_decline_rate": 0.6978,
+      "median_w2_impressions": 360.0,
+      "lift_vs_base": 1.1325
+    },
+    {
+      "action": "5 No action",
+      "pages": 17777,
+      "observed_decline_rate": 0.5817,
+      "median_w2_impressions": 414.0,
+      "lift_vs_base": 0.944
+    }
+  ],
+  "reason_codes": [
+    {
+      "reason_code": "young_page",
+      "pages": 10091,
+      "decline_rate_with": 0.716,
+      "decline_rate_without": 0.5423
+    },
+    {
+      "reason_code": "no_clicks_w2",
+      "pages": 12093,
+      "decline_rate_with": 0.6481,
+      "decline_rate_without": 0.5829
+    },
+    {
+      "reason_code": "already_falling",
+      "pages": 12528,
+      "decline_rate_with": 0.653,
+      "decline_rate_without": 0.575
+    },
+    {
+      "reason_code": "recent_spike",
+      "pages": 5239,
+      "decline_rate_with": 0.5969,
+      "decline_rate_without": 0.6216
+    },
+    {
+      "reason_code": "high_visibility",
+      "pages": 3852,
+      "decline_rate_with": 0.5602,
+      "decline_rate_without": 0.627
+    },
+    {
+      "reason_code": "thin_metadata",
+      "pages": 872,
+      "decline_rate_with": 0.6583,
+      "decline_rate_without": 0.6146
+    }
+  ],
+  "limitations": {
+    "largest_client_share": 0.289,
+    "client_base_rate_min_100plus": 0.181,
+    "client_base_rate_max_100plus": 0.961,
+    "updated_inside_label_window": 0.683
+  },
+  "top_coefficients": {
+    "main_intent_unknown": 0.5862,
+    "content_type_feedly article": 0.3586,
+    "age_at_T": -0.352,
+    "log_clicks_w2": -0.2776,
+    "log_clicks_w3": -0.2474,
+    "content_type_keyword article": 0.2294,
+    "content_type_comparison article": -0.2224,
+    "log_impressions_w2": 0.2075,
+    "log_impressions_w3": 0.1815,
+    "has_word_count": 0.1413,
+    "log_search_volume": -0.1406,
+    "main_intent_informational": -0.1271
+  }
+}

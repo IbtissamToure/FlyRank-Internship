@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which pages are about to lose search visibility? A leakage-safe decline-risk ranking</title>
+<meta name="description" content="A research paper on ranking content pages by next-month search-visibility decline risk, using only signals available before the outcome window, validated on held-out clients. Built on the FlyRank ML Internship dataset.">
+<meta name="author" content="Ibtissam Toure">
+<style>
+  :root {
+    --surface: #fcfcfb; --surface-2: #f3f2ef; --ink: #0b0b0b; --ink-2: #52514e; --ink-3: #7a7974;
+    --rule: #e4e3df; --accent: #2a78d6; --accent-ink: #1c5cab; --orange: #eb6834; --aqua: #1baf7a;
+    --measure: 44rem;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--surface); color: var(--ink);
+         font: 17px/1.65 Charter, "Iowan Old Style", "Source Serif Pro", Georgia, serif; }
+  .wrap { max-width: var(--measure); margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+  header.paper { border-bottom: 1px solid var(--rule); padding-bottom: 1.75rem; margin-bottom: 2rem; }
+  .kicker { font: 600 0.78rem/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .08em;
+            text-transform: uppercase; color: var(--accent-ink); margin: 0 0 .75rem; }
+  h1 { font-size: clamp(1.7rem, 4.5vw, 2.35rem); line-height: 1.18; margin: 0 0 1rem; letter-spacing: -.01em; }
+  .byline { font: 0.92rem/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink-2); margin: 0; }
+  .byline a { color: var(--ink-2); }
+  h2 { font: 700 1.3rem/1.3 system-ui, -apple-system, "Segoe UI", sans-serif; margin: 2.75rem 0 .75rem;
+       letter-spacing: -.005em; }
+  h2 .num { color: var(--ink-3); font-weight: 600; margin-right: .4rem; }
+  h3 { font: 650 1.02rem/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; margin: 1.75rem 0 .5rem; }
+  p, li { margin: 0 0 .9rem; }
+  ul, ol { padding-left: 1.3rem; }
+  a { color: var(--accent-ink); text-underline-offset: 2px; }
+  code { font: .86em/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; background: var(--surface-2);
+         padding: .08em .3em; border-radius: 4px; }
+  .abstract { background: var(--surface-2); border-left: 3px solid var(--accent); padding: 1.1rem 1.25rem;
+              border-radius: 0 6px 6px 0; margin: 0 0 1.5rem; }
+  .abstract h2 { margin-top: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  .abstract p { margin: 0; }
+  .keyfacts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .75rem; margin: 1.5rem 0 0; }
+  .fact { border: 1px solid var(--rule); border-radius: 8px; padding: .8rem .9rem; background: #fff; }
+  .fact .v { font: 700 1.5rem/1.1 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
+  .fact .l { font: .8rem/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink-2); margin-top: .3rem; }
+  figure { margin: 1.75rem 0; }
+  figure img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+  figcaption { font: .9rem/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink-2); margin-top: .6rem; }
+  figcaption b { color: var(--ink); }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0 1.5rem; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; font: .88rem/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+          font-variant-numeric: tabular-nums; }
+  th, td { padding: .5rem .6rem; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; border-bottom: 1.5px solid #cfcec9; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  tr.hl td { background: #eef4fc; font-weight: 600; }
+  tr.muted td { color: var(--ink-2); }
+  .tcap { font: .85rem/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink-2); margin: -.75rem 0 1.5rem; }
+  .timeline { display: grid; grid-template-columns: 1fr 1fr auto 1fr; gap: 0; margin: 1.25rem 0 .5rem;
+              font: .85rem/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .timeline .seg { padding: .7rem .6rem; border: 1px solid var(--rule); background: #fff; text-align: center; }
+  .timeline .seg b { display: block; font-size: .95rem; }
+  .timeline .feat { background: #eef4fc; border-color: #b7d3f6; }
+  .timeline .lab { background: #fdeee7; border-color: #f4bfa6; }
+  .timeline .t { display: flex; align-items: center; justify-content: center; padding: 0 .55rem;
+                 font-weight: 700; color: var(--ink); border-top: 1px dashed var(--ink-3); border-bottom: 1px dashed var(--ink-3); }
+  .callout { border: 1px solid var(--rule); border-radius: 8px; padding: .9rem 1.1rem; margin: 1.25rem 0; background: #fff; }
+  .callout p:last-child { margin-bottom: 0; }
+  .claims { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+  .claims > div { border: 1px solid var(--rule); border-radius: 8px; padding: .8rem 1rem; background: #fff; }
+  .claims h3 { margin-top: 0; }
+  .claims ul { margin: 0; }
+  footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1.25rem;
+           font: .85rem/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink-2); }
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .claims { grid-template-columns: 1fr; }
+    .timeline { grid-template-columns: 1fr; }
+    .timeline .t { border: none; padding: .35rem; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<header class="paper">
+  <p class="kicker">FlyRank ML Internship · Capstone research paper · Freestyle lane: decline-risk prediction</p>
+  <h1>Which pages are about to lose search visibility? A leakage-safe decline-risk ranking</h1>
+  <p class="byline">Ibtissam Toure · November 2026 · <a href="https://github.com/IbtissamToure/FlyRank-Internship">Code &amp; notebooks</a></p>
+</header>
+
+<section class="abstract" aria-labelledby="abstract">
+  <h2 id="abstract">Abstract</h2>
+  <p>Content teams can only review a handful of pages per client each month, so the question is which pages to look at before they lose search visibility. Using 23,727 anonymized pages from 31 client sites in the FlyRank ML Internship dataset, I split each page's 90-day history into three 30-day windows and learned only from days 31–90 to rank the risk of a ≥20% impressions drop in the most recent 30 days. A logistic-regression ranking, validated with 5-fold cross-validation grouped by client so every page is scored by a model that never saw its site, reached ROC-AUC 0.60 against 0.53 for an "already falling" rule and 0.51 for a "highest visibility" rule, and its top-50 review list per test fold caught a decline 84% of the time against a 63% base rate; it also out-ranked the falling-traffic rule inside 16 of the 20 larger clients. The output is a reason-coded, per-client review playbook — decision support for prioritising human review, not a forecast of any single page and not a model of Google's ranking system.</p>
+</section>
+
+<div class="keyfacts" role="list">
+  <div class="fact" role="listitem"><div class="v">0.60</div><div class="l">ROC-AUC, held-out clients (rules: 0.53 / 0.51)</div></div>
+  <div class="fact" role="listitem"><div class="v">84%</div><div class="l">of the top-50 review list declined (base rate 63%)</div></div>
+  <div class="fact" role="listitem"><div class="v">16 / 20</div><div class="l">clients where the model out-ranks the falling-traffic rule</div></div>
+  <div class="fact" role="listitem"><div class="v">0 days</div><div class="l">of overlap between feature and label windows</div></div>
+</div>
+
+<h2 id="introduction"><span class="num">1</span>Introduction: the decision this supports</h2>
+<p>Picture an editor responsible for a client site with 700 published articles. This month they have time to review twenty. Two rules of thumb are common: start with the pages that get the most impressions ("protect what matters"), or start with the pages whose traffic is already dropping ("follow the trend"). Both are cheap and transparent. The question in this paper is whether a model that combines several simple signals can produce a better review order — measured by how many of the first pages reviewed actually go on to lose visibility.</p>
+<p>The cost structure is asymmetric but mild: a false alarm costs one unnecessary review; a miss means a page that was about to lose a fifth of its impressions is noticed a month late. That makes this a <em>ranking</em> problem judged by precision at the top of the list, not a yes/no classifier.</p>
+<p>The work also corrects my own earlier iteration. In weeks 5–7 of the internship I trained on a snapshot label using 90-day features — but those 90 days include the very month the label measures. The capstone rebuilds the task so that nothing the model sees comes from the outcome window.</p>
+
+<h2 id="data"><span class="num">2</span>Data</h2>
+<p><strong>Source.</strong> The FlyRank ML Internship dataset: the anonymized starter release of 30,000 content pages across 32 pseudonymized client sites, with trailing 90-day Google Search Console and GA4 metrics, content metadata and keyword context. Client and page identifiers are pseudonyms; no names, domains, URLs or search queries are used or shown anywhere in this work. (The full warehouse release — 79M daily rows — was used earlier in the internship to write and verify the data contract; the capstone model runs on the starter release because it already carries the non-overlapping windows the design needs.)</p>
+<p><strong>Three windows inside one snapshot.</strong> Each page has 90-day totals plus "last 30 days" and "previous 30 days" columns. Subtracting the two from the 90-day total recovers the oldest 30 days (it is never negative — checked on every row). That gives a clean prediction moment <em>T</em>, 30 days before export:</p>
+<div class="timeline" aria-label="Window layout">
+  <div class="seg feat"><b>W3 · days 61–90</b>features</div>
+  <div class="seg feat"><b>W2 · days 31–60</b>features</div>
+  <div class="t">T</div>
+  <div class="seg lab"><b>W1 · days 1–30</b>label only</div>
+</div>
+<p class="tcap">Everything the model sees comes from the blue windows; the orange window is used only to define the outcome.</p>
+<p><strong>What was excluded, and why.</strong></p>
+<ul>
+  <li><strong>6,273 low-volume pages</strong> with fewer than 10 impressions in W2 — a ±20% move on single-digit counts is noise, and pages with zero W2 impressions cannot "decline". 23,727 pages from 31 clients remain.</li>
+  <li><strong>Every 90-day aggregate</strong> (total impressions/clicks/sessions, CTR, average position, engagement rate, days-with-impressions, and the tiers built on them) — they contain the label window.</li>
+  <li><strong>Days since last update</strong> — 68% of pages were last updated inside the label window, so its value at T is unknown.</li>
+  <li><strong><code>trend_direction</code> and <code>trend_pct</code></strong> — they <em>are</em> the label.</li>
+  <li><strong>Generation provider / model fields</strong> — marked "not a model feature" in the data dictionary.</li>
+  <li><strong>Client and page IDs</strong> — used only to group the validation split, never as inputs.</li>
+</ul>
+
+<h2 id="methodology"><span class="num">3</span>Methodology</h2>
+<h3>Label</h3>
+<p>A page is labelled <strong>declined</strong> when its impressions in W1 are more than 20% below W2 — the dataset pipeline's own "down" rule, which my reconstruction reproduces on all 30,000 rows. Among eligible pages the base rate is 61.6%: most of the portfolio lost visibility that month, which is exactly why every precision number below is shown next to its base rate.</p>
+<h3>Features (19, all knowable at T)</h3>
+<ul>
+  <li><strong>Volume:</strong> log impressions, clicks and sessions in W2 and in W3.</li>
+  <li><strong>Momentum:</strong> the W3 → W2 log-change for each of the three.</li>
+  <li><strong>Click capture:</strong> CTR in W2.</li>
+  <li><strong>Page context:</strong> content age at T, word count, content type, main search intent.</li>
+  <li><strong>Keyword context:</strong> search volume, competition, CPC — plus <code>has_keyword_data</code> and <code>has_word_count</code> flags, because missingness follows content type and a blind zero-fill would smuggle the type in silently.</li>
+</ul>
+<h3>Baselines</h3>
+<ul>
+  <li><strong>Visibility rule:</strong> rank by W2 impressions — the week-4 baseline, made leakage-safe.</li>
+  <li><strong>Already-falling rule:</strong> rank by the size of the W3 → W2 drop — the rule I proposed in week 2.</li>
+</ul>
+<h3>Models</h3>
+<p>Logistic regression (primary: interpretable, continuous with week 5) and histogram gradient boosting as a non-linear check. Both configurations were fixed before evaluation; random seed 42 throughout.</p>
+<h3>Validation design</h3>
+<p>Five-fold cross-validation <strong>grouped by client</strong>: all pages of a client sit in the same fold, so every page receives an out-of-fold score from a model trained only on other clients (zero client overlap is asserted in code). Metrics per test fold: ROC-AUC, average precision, Precision@50 and @200. Because an editor works one site at a time, the operational view re-ranks pages <em>within</em> each of the 20 clients with at least 100 eligible pages and reports within-client AUC and Precision@20.</p>
+<h3>Leakage checks</h3>
+<p>(a) The feature list is asserted against a forbidden-column list (label fields, 90-day aggregates, update recency, IDs). (b) Deliberate-leak experiments put the forbidden columns back to show how far the score would be inflated (Figure 3).</p>
+
+<h2 id="results"><span class="num">4</span>Results</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Method (same folds, same pages)</th><th class="n">ROC-AUC</th><th class="n">Avg precision</th><th class="n">Precision@50</th><th class="n">Precision@200</th></tr></thead>
+  <tbody>
+    <tr class="muted"><td>Base rate (no ranking)</td><td class="n">0.500</td><td class="n">0.632</td><td class="n">0.632</td><td class="n">0.632</td></tr>
+    <tr><td>Visibility rule</td><td class="n">0.505</td><td class="n">0.624</td><td class="n">0.504</td><td class="n">0.539</td></tr>
+    <tr><td>Already-falling rule</td><td class="n">0.533</td><td class="n">0.647</td><td class="n">0.588</td><td class="n">0.612</td></tr>
+    <tr><td>Gradient boosting</td><td class="n">0.586</td><td class="n">0.698</td><td class="n">0.732</td><td class="n">0.766</td></tr>
+    <tr class="hl"><td>Logistic regression</td><td class="n">0.597</td><td class="n">0.712</td><td class="n">0.836</td><td class="n">0.812</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="tcap">Table 1. Mean over five client-grouped test folds (AUC fold-to-fold s.d.: model 0.019, falling rule 0.023, visibility rule 0.055). Precision@K is the share of the top-K pages in each test fold that declined.</p>
+
+<figure>
+  <img src="img/fig1_precision_at_k.svg" alt="Line chart: share of the top-K reviewed pages that declined, for K from 10 to 500. Logistic regression stays between about 86% and 77%, gradient boosting between 66% and 77%, the already-falling rule rises from 48% to 64%, the visibility rule from 44% to 58%; base rate 63%.">
+  <figcaption><b>Figure 1. The model's review list stays well above the base rate; both rules sit at or below it.</b> At K = 50 the logistic-regression list catches a decline 84% of the time versus 63% for an unranked list — about one extra true decline in every five pages reviewed.</figcaption>
+</figure>
+
+<figure>
+  <img src="img/fig2_within_client_auc.svg" alt="Dot plot of within-client ROC-AUC for 20 clients, comparing visibility rule, already-falling rule and logistic regression. The model is above 0.5 in 19 of 20 clients and above the falling rule in 16.">
+  <figcaption><b>Figure 2. Inside individual sites, the gain holds for most clients but not all.</b> Median within-client AUC is 0.60 for the model versus 0.53 for the falling rule and 0.45 for the visibility rule; median Precision@20 is 80% versus 60% and 55% (median client base rate 67%). The model is above chance in 19 of 20 clients and beats the falling rule in 16 — but in four clients the simple rule ranks as well or better.</figcaption>
+</figure>
+
+<h3>Leakage: the score you would have reported</h3>
+<figure>
+  <img src="img/fig3_leakage.svg" alt="Bar chart of ROC-AUC: honest features 0.597; adding 90-day aggregates 0.687; adding trend_pct 1.000.">
+  <figcaption><b>Figure 3. Overlapping windows nearly double the lift over chance; the label field makes it perfect.</b> Adding 90-day aggregates — which include the outcome month — lifts AUC from 0.60 to 0.69; adding <code>trend_pct</code> gives 1.00. Neither number would survive deployment.</figcaption>
+</figure>
+<p>The same correction applies to my own earlier work: the week-5 feature set (snapshot metadata including update recency) scores AUC 0.55 and Precision@50 0.76 on this forward label, below the capstone model's 0.60 and 0.84.</p>
+
+<h3>Robustness</h3>
+<ul>
+  <li><strong>Single 80/20 client split</strong> (week-5 design, seed 42; 7 held-out clients, 4,252 pages, base rate 61%): AUC 0.63, Precision@50 0.92 vs 0.54 for the falling rule.</li>
+  <li><strong>Stricter volume floor</strong> (≥ 100 W2 impressions, 18,010 pages): out-of-fold AUC 0.63 vs 0.57 for the falling rule.</li>
+  <li><strong>Non-linear model</strong> did not help: gradient boosting is slightly below logistic regression on every metric, so the simpler model is kept.</li>
+</ul>
+
+<h3>What the ranking leans on</h3>
+<p>Standardized logistic-regression coefficients (associations in this window, not causes):</p>
+<ul>
+  <li><strong>Younger pages</strong> are more likely to decline (age at T has the largest numeric weight, negative). Pages under six months old declined 72% of the time versus 54% for older ones — consistent with an early visibility bump fading.</li>
+  <li><strong>Pages that already earn clicks are steadier</strong>: higher W2 and W3 clicks lower the risk, while higher impressions at the same click level raise it — visibility without click capture looks fragile.</li>
+  <li><strong>Content type and intent matter</strong>: feed-sourced articles and pages with no recorded search intent carry higher risk; comparison articles lower. The "unknown intent" signal may partly stand in for site-level differences, which is one reason the evaluation is grouped by client.</li>
+  <li><strong>Momentum is a weak signal on its own</strong>: pages already falling declined 65% of the time vs 58% for the rest, and recent spikes did not reliably fall back. This is why the falling-traffic rule is barely better than chance.</li>
+</ul>
+
+<h2 id="limitations"><span class="num">5</span>Limitations &amp; honest framing</h2>
+<div class="claims">
+  <div>
+    <h3>What this work supports</h3>
+    <ul>
+      <li><strong>Observed:</strong> in this release, the ranking ordered next-month declines better than two common rules on clients it had never seen.</li>
+      <li><strong>Directional:</strong> young pages and pages with visibility but few clicks were more decline-prone in this window.</li>
+      <li><strong>Decision-support:</strong> a per-client review order for humans.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>What it does not claim</h3>
+    <ul>
+      <li>That any page <em>will</em> decline, or that scores are calibrated probabilities.</li>
+      <li>That editing a page causes recovery — there is no experiment here.</li>
+      <li>Anything about how Google's ranking system works.</li>
+    </ul>
+  </div>
+</div>
+<ul>
+  <li><strong>One forward month.</strong> The label is a pseudo-forward split of a single export, so every page shares the same 30-day outcome window. Whatever affected all sites that month (seasonality, a search update) sits in the 62% base rate and cannot be separated out. A rolling, multi-month backtest on the daily warehouse table — with the final month sealed — is needed before calling this a forecast.</li>
+  <li><strong>Modest discrimination.</strong> AUC 0.60 is clearly better than chance and than both rules, but it is not a sharp classifier. Its value is in reordering a review queue, not in judging single pages.</li>
+  <li><strong>Unbalanced panel.</strong> One client holds 29% of eligible pages, and among the 20 larger clients the decline base rate ranges from 18% to 96%. Grouped folds and within-client results keep this visible; results for small clients are noisy, and four clients do not benefit.</li>
+  <li><strong>Metadata assumed stable</strong> between T and export (type, intent, keyword fields, word count). This cannot be verified from the snapshot.</li>
+  <li><strong>Threshold by convention.</strong> The 20% decline cut-off is the pipeline's definition, not a cost-validated business threshold.</li>
+</ul>
+
+<h2 id="recommendations"><span class="num">6</span>Ranked recommendations: the action playbook</h2>
+<p>Every eligible page receives its out-of-fold risk score and is ranked <em>within its own client</em>. The action depends on risk and stakes; each page also carries plain-language reason codes. The last column is the evidence: the observed share of pages in that bucket that went on to decline.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Priority / action</th><th>Who lands here</th><th>What a person does</th><th class="n">Pages</th><th class="n">Declined</th></tr></thead>
+  <tbody>
+    <tr><td><strong>1 · Protect — review now</strong></td><td>Top 10% risk in its client, ≥ 1,000 impressions in W2</td><td>Check current rankings and intent match; refresh facts and examples; secure internal links. Highest stakes first.</td><td class="n">750</td><td class="n">79%</td></tr>
+    <tr><td><strong>2 · Improve — snippet / intent review</strong></td><td>Top 10% risk, zero clicks in W2</td><td>Visibility without clicks: review title, meta description and whether the page answers the query it shows for.</td><td class="n">1,476</td><td class="n">74%</td></tr>
+    <tr><td><strong>3 · Investigate — refresh or merge</strong></td><td>Top 10% risk, lower visibility, some clicks</td><td>Look for overlap with stronger pages on the same topic; decide refresh, merge or leave.</td><td class="n">163</td><td class="n">72%</td></tr>
+    <tr><td><strong>4 · Monitor</strong></td><td>Top 10–25% risk in its client</td><td>No change yet; re-score next month and escalate if it climbs.</td><td class="n">3,561</td><td class="n">70%</td></tr>
+    <tr class="muted"><td>5 · No action</td><td>Everything else</td><td>—</td><td class="n">17,777</td><td class="n">58%</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="tcap">Table 2. Observed decline rate per bucket, out-of-fold (overall 62%). The ladder falls monotonically from 79% to 58%. Bucket thresholds were set once by hand, not tuned.</p>
+
+<figure>
+  <img src="img/fig4_action_buckets.svg" alt="Horizontal bar chart: observed decline rate by action bucket — Protect 79%, Improve 74%, Investigate 72%, Monitor 70%, No action 58%; overall 62%.">
+  <figcaption><b>Figure 4. Higher-priority buckets really did decline more often.</b> The Protect bucket — 750 pages, median 1,977 W2 impressions — declined 79% of the time, 1.28× the overall rate.</figcaption>
+</figure>
+
+<h3>Reason codes</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Code</th><th>Meaning</th><th class="n">Declined with</th><th class="n">without</th></tr></thead>
+  <tbody>
+    <tr><td><code>young_page</code></td><td>Under ~6 months old at T</td><td class="n">72%</td><td class="n">54%</td></tr>
+    <tr><td><code>already_falling</code></td><td>W2 impressions &gt; 20% below W3</td><td class="n">65%</td><td class="n">58%</td></tr>
+    <tr><td><code>no_clicks_w2</code></td><td>Impressions but no clicks in W2</td><td class="n">65%</td><td class="n">58%</td></tr>
+    <tr><td><code>thin_metadata</code></td><td>No keyword data or unknown intent</td><td class="n">66%</td><td class="n">62%</td></tr>
+    <tr><td><code>high_visibility</code></td><td>≥ 3,000 W2 impressions — raises the stakes, not the risk</td><td class="n">56%</td><td class="n">63%</td></tr>
+    <tr><td><code>recent_spike</code></td><td>W2 impressions &gt; 25% above W3 — context only</td><td class="n">60%</td><td class="n">62%</td></tr>
+  </tbody>
+</table>
+</div>
+<h3>How to use it tomorrow</h3>
+<ol>
+  <li>Open the queue for one client and work down Protect, then Improve, then Investigate — about the top 10% of that site.</li>
+  <li>Before acting, verify current performance in Search Console: the score is a month old by design.</li>
+  <li>Never automate publishing, rewriting, deleting or redirecting from this score. A human decides every action.</li>
+  <li>Monitor monthly: Precision@20 per client, the decline base rate, feature drift and the reason-code mix. Retrain or retire if precision falls to the base rate for two consecutive months.</li>
+</ol>
+
+<h2 id="reproducibility"><span class="num">7</span>Reproducibility</h2>
+<ul>
+  <li><strong>Notebook (single source of every number and figure):</strong> <a href="https://github.com/IbtissamToure/FlyRank-Internship/blob/main/work/notebooks/capstone.ipynb"><code>work/notebooks/capstone.ipynb</code></a> — runs top to bottom in under a minute on the starter CSV shipped in the repo.</li>
+  <li><strong>Metrics receipt:</strong> <a href="https://github.com/IbtissamToure/FlyRank-Internship/blob/main/work/outputs/capstone_metrics.json"><code>work/outputs/capstone_metrics.json</code></a>.</li>
+  <li><strong>Earlier steps:</strong> research question, task framing, data contract (warehouse), baseline, week-5 model, validation audit and playbook notebooks in <a href="https://github.com/IbtissamToure/FlyRank-Internship/tree/main/work/notebooks"><code>work/notebooks/</code></a>; written report in <a href="https://github.com/IbtissamToure/FlyRank-Internship/blob/main/work/capstone_report.md"><code>work/capstone_report.md</code></a>.</li>
+  <li><strong>Settings:</strong> seed 42; <code>GroupKFold(n_splits=5)</code> by client; scikit-learn ≥ 1.4, pandas ≥ 2.2 (see <code>requirements.txt</code>). Re-run: <code>pip install -r requirements.txt</code>, then run the notebook from <code>work/notebooks/</code>.</li>
+</ul>
+
+<h2 id="acknowledgments"><span class="num">8</span>Acknowledgments &amp; data credit</h2>
+<p>Built on the <a href="https://flyrank.ai">FlyRank ML Internship dataset</a>. Thanks to the FlyRank team for releasing real, anonymized search and analytics data for this internship and for the methodology guidance — on leakage, grouped validation and careful claims — that shaped this work. All client and page identifiers are pseudonyms; no client names, domains, URLs, queries or raw exports appear in this paper or its repository.</p>
+
+<footer>
+  <p>Ibtissam Toure · Computer Science, Arab Open University (Riyadh) · ML Intern, FlyRank · <a href="https://github.com/IbtissamToure">GitHub</a> · <a href="https://ibtissamtoure.github.io/portfolio">Portfolio</a></p>
+</footer>
+</main>
+</body>
+</html>
